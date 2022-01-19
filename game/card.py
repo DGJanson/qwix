@@ -85,3 +85,22 @@ class Card:
         score = score - (self.wrongThrows * 5)
 
         return(score)
+
+    def checkDone(self):
+        if self.wrongThrows >= 4:
+            return True
+
+        finished = 0
+        if len(self.available["blue"]) == 0:
+            finished = finished + 1
+        if len(self.available["green"]) == 0:
+            finished = finished + 1
+        if len(self.available["yellow"]) == 0:
+            finished = finished + 1
+        if len(self.available["red"]) == 0:
+            finished = finished + 1
+
+        if finished >= 2:
+            return True
+        else:
+            return False

@@ -24,13 +24,25 @@ class QwixGame:
     def playGame(self):
         roundNumber = 1
         activePlayer = 0
+        gameRunning = True
 
-        for i in range(0,30):
+        while gameRunning: 
             self.playRound(roundNumber, activePlayer)
+
             roundNumber += 1
             activePlayer += 1
             if activePlayer >= len(self.players):
                 activePlayer = 0
+            for plyr in self.players:
+                if plyr[0].checkDone():
+                    gameRunning = False
+            if roundNumber >= 100:
+                gameRunning = False
+
+        logger.info("Game finished after {} rounds".format(roundNumber))
+        for plyr in self.players:
+            logger.info("Player scored {} points".format(plyr[0].calcScore()))
+
 
     def playRound(self, roundNumber, activePlayer):
         logger.info("Playing round {}".format(roundNumber))
