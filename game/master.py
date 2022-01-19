@@ -5,6 +5,7 @@ import logging
 
 from .card import Card
 from .dice import simulateThrow, getPossibleNumbers
+from ..players.basicPlayer import BasicPlayer
 
 logger = logging.getLogger("qwix")
 
@@ -17,8 +18,8 @@ class QwixGame:
 
     def setupPlayers(self):
         self.players = []
-        self.players.append((Card(), None))
-        self.players.append((Card(), None))
+        self.players.append((Card(), BasicPlayer()))
+        self.players.append((Card(), BasicPlayer()))
 
     def playGame(self):
         roundNumber = 1
@@ -41,11 +42,14 @@ class QwixGame:
         for i in range(0, len(self.players)):
             if i == activePlayer:
                 result = self.decideActivePlayer(self.players[i], availableActive)
+                self.players[i][0].markNumber(result["color"], result["number"])
                 if result["color"] != "error": # if no failed throw, then potentially get another throw
-                    availableActive = self.pruneAvailable(self.players[i], availableActive, result)
+                    availableActive = self.pruneAvailable(availableActive, result)
                     result = self.decideOtherPlayer(self.players[i], availableActive)
+                    self.players[i][0].markNumber(result["color"], result["number"])
             else:
                 result = self.decideOtherPlayer(self.players[i], availableOther)
+                self.players[i][0].markNumber(result["color"], result["number"])
 
     def decideActivePlayer(self, player, available):
         optionList = []
@@ -57,10 +61,13 @@ class QwixGame:
         playerCard = player[0]
 
         for av in available:
-            if (playerCard.isAvailable(av[0], av[1])):
+            if (playerCard.isAvailable(av[0], av[1])) >= 0:
                 optionList.append(self.createOption(av[0], av[1], av[2], playerCard))
 
         logger.info(optionList)
+        result = player[1].makeMove(optionList)
+        logger.info(result)
+        return(result)
 
     def decideOtherPlayer(self, player, available):
         # generate a list of options
@@ -77,6 +84,9 @@ class QwixGame:
                 optionList.append(self.createOption(av[0], av[1], av[2], playerCard))
 
         logger.info(optionList)
+        result = player[1].makeMove(optionList)
+        logger.info(result)
+        return(result)
 
     def createOption(self, color, number, whiteDice, card):
         action = {}
@@ -90,15 +100,13 @@ class QwixGame:
     def pruneAvailable(self, available, result):
         newAvailable = []
 
-        usedColorDice = True
-        if result["color"] == "white":
-            usedColorDice = False
+        usedWhiteDice = result["whiteDice"]
 
         for av in available:
-            if usedColorDice && av[2] == True: # if used color dice, only white options allowed
+            if usedWhiteDice == False and av[2] == True: # if used color dice, only white options allowed
                 if result["color"] != av[0]: # but only if for a different color than the one chosen
-                    newAvailable.push(av)
-            elif !usedColorDice && av[2] == False: # if not used color (aka white) than all white options are allowed
-                 newAvailable.push(av)
+                    newAvailable.append(av)
+            elif usedWhiteDice == True and av[2] == False: # if used white than all color options are allowed
+                 newAvailable.append(av)
 
         return newAvailable
