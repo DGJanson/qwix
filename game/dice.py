@@ -9,27 +9,25 @@ def simulateThrow():
     toReturn["red"] = randint(1,6)
     toReturn["yellow"] = randint(1,6)
     return(toReturn)
-    
+
 def getPossibleNumbers(diceThrow, includeColorDice = False):
-    toReturn = {}
+    toReturn = []
     whiteResult = diceThrow["white_1"] + diceThrow["white_2"]
-    
-    toReturn["blue"] = [whiteResult]
-    toReturn["green"] = [whiteResult]
-    toReturn["red"] = [whiteResult]
-    toReturn["yellow"] = [whiteResult]
-    
+
+    toReturn.append(("blue", whiteResult, True))
+    toReturn.append(("green", whiteResult, True))
+    toReturn.append(("yellow", whiteResult, True))
+    toReturn.append(("red", whiteResult, True))
+
+
     if (includeColorDice == True):
-        toReturn["blue"].append(diceThrow["white_1"] + diceThrow["blue"])
-        toReturn["blue"].append(diceThrow["white_2"] + diceThrow["blue"])
-        toReturn["green"].append(diceThrow["white_1"] + diceThrow["green"])
-        toReturn["green"].append(diceThrow["white_2"] + diceThrow["green"])
-        toReturn["red"].append(diceThrow["white_1"] + diceThrow["red"])
-        toReturn["red"].append(diceThrow["white_2"] + diceThrow["red"])
-        toReturn["yellow"].append(diceThrow["white_1"] + diceThrow["yellow"])
-        toReturn["yellow"].append(diceThrow["white_2"] + diceThrow["yellow"])
-    
+        toReturn.append(("blue", diceThrow["white_1"] + diceThrow["blue"], False))
+        toReturn.append(("blue", diceThrow["white_2"] + diceThrow["blue"], False))
+        toReturn.append(("green", diceThrow["white_1"] + diceThrow["green"], False))
+        toReturn.append(("green", diceThrow["white_2"] + diceThrow["green"], False))
+        toReturn.append(("yellow", diceThrow["white_1"] + diceThrow["yellow"], False))
+        toReturn.append(("yellow", diceThrow["white_2"] + diceThrow["yellow"], False))
+        toReturn.append(("red", diceThrow["white_1"] + diceThrow["red"], False))
+        toReturn.append(("red", diceThrow["white_2"] + diceThrow["red"], False))
+
     return(toReturn)
-    
-    
-    

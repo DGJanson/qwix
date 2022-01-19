@@ -58,6 +58,14 @@ class Card:
 
 
     def markNumber(self, color, number):
+        # edge cases -> pass and error
+        if color == "pass": # do nothing
+            return
+
+        if color == "error": # increment wrong throws
+            self.wrongThrows = self.wrongThrows + 1
+            return
+
         if (self.isAvailable(color, number) < 0):
             logger.warning("Marking number that is not available")
             return
