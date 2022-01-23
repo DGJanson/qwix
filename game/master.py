@@ -6,6 +6,7 @@ import logging
 from .card import Card
 from .dice import simulateThrow, getPossibleNumbers
 from ..players.basicPlayer import BasicPlayer
+from ..players.slightlyMoreAdvancedPlayer import SMAPlayer
 
 logger = logging.getLogger("qwix")
 
@@ -16,6 +17,7 @@ class QwixGame:
         self.activePlayer = 0
         self.gameRunning = True
         self.closedColors = set()
+        self.curTopScore = 0
 
         self.setupPlayers()
         logger.info("Game setup ready")
@@ -24,7 +26,7 @@ class QwixGame:
     def setupPlayers(self):
         self.players = []
         self.players.append((Card(), BasicPlayer()))
-        self.players.append((Card(), BasicPlayer()))
+        self.players.append((Card(), SMAPlayer()))
 
     def playFullGame(self):
 
@@ -43,7 +45,8 @@ class QwixGame:
 
         logger.info("Game finished after {} rounds".format(self.roundNumber))
         for plyr in self.players:
-            logger.info("Player scored {} points".format(plyr[0].calcScore()))
+            logger.info("Player {} scored:".format(plyr[1].name))
+            logger.info("{}".format(plyr[0]))
 
 
     def playRound(self, roundNumber, activePlayer):
@@ -71,14 +74,17 @@ class QwixGame:
                     self.closedColors.add(result["color"])
                     logger.info("Closed color {}".format(result["color"]))
 
-    def decideActivePlayer(self, player, available):
-        optionList = []
-        errorAction = {}
-        errorAction["color"] = "error"
-        errorAction["number"] = 0
-        optionList.append(errorAction)
+        # calc top score
+        self.curTopScore = 0
+        for i in range(0, len(self.players)):
+            if self.players[i][0].calcScore() > self.curTopScore:
+                self.curTopScore = self.players[i][0].calcScore()
 
+
+    def decideActivePlayer(self, player, available):
         playerCard = player[0]
+        optionList = []
+        optionList.append(self.createOption("error", 0, False, playerCard))
 
         for av in available:
             if (playerCard.isAvailable(av[0], av[1])) >= 0:
@@ -86,18 +92,14 @@ class QwixGame:
 
         logger.debug(optionList)
         result = player[1].makeMove(optionList)
-        logger.info(result)
+        logger.info("{} chose: {}".format(player[1].name, result))
         return(result)
 
     def decideOtherPlayer(self, player, available):
         # generate a list of options
-        optionList = []
-        passAction = {}
-        passAction["color"] = "pass"
-        passAction["number"] = 0
-        optionList.append(passAction)
-
         playerCard = player[0]
+        optionList = []
+        optionList.append(self.createOption("pass", 0, False, playerCard))
 
         for av in available:
             if playerCard.isAvailable(av[0], av[1]) >= 0:
@@ -105,7 +107,7 @@ class QwixGame:
 
         logger.debug(optionList)
         result = player[1].makeMove(optionList)
-        logger.info(result)
+        logger.info("{} chose: {}".format(player[1].name, result))
         return(result)
 
     def createOption(self, color, number, whiteDice, card):
@@ -114,6 +116,8 @@ class QwixGame:
         action["number"] = number
         action["whiteDice"] = whiteDice
         action["nrInLine"] = card.isAvailable(color, number)
+        action["scoreDiff"] = self.curTopScore - card.calcScore()
+        action["totalAvailable"] = card.nrAvailable()
 
         return(action)
 

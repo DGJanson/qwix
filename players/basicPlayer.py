@@ -7,7 +7,7 @@ class BasicPlayer:
 
     def __init__(self):
         # nothing to do here really
-        pass
+        self.name = "Basic Player"
 
     def makeMove(self, actionList):
         """
