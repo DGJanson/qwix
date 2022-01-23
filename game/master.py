@@ -12,6 +12,11 @@ logger = logging.getLogger("qwix")
 class QwixGame:
 
     def __init__(self):
+        self.roundNumber = 1
+        self.activePlayer = 0
+        self.gameRunning = True
+        self.closedColors = set()
+
         self.setupPlayers()
         logger.info("Game setup ready")
 
@@ -21,25 +26,22 @@ class QwixGame:
         self.players.append((Card(), BasicPlayer()))
         self.players.append((Card(), BasicPlayer()))
 
-    def playGame(self):
-        roundNumber = 1
-        activePlayer = 0
-        gameRunning = True
+    def playFullGame(self):
 
-        while gameRunning: 
-            self.playRound(roundNumber, activePlayer)
+        while self.gameRunning:
+            self.playRound(self.roundNumber, self.activePlayer)
 
-            roundNumber += 1
-            activePlayer += 1
-            if activePlayer >= len(self.players):
-                activePlayer = 0
+            self.roundNumber += 1
+            self.activePlayer += 1
+            if self.activePlayer >= len(self.players):
+                self.activePlayer = 0
             for plyr in self.players:
                 if plyr[0].checkDone():
-                    gameRunning = False
-            if roundNumber >= 100:
-                gameRunning = False
+                    self.gameRunning = False
+            if self.roundNumber >= 100:
+                self.gameRunning = False
 
-        logger.info("Game finished after {} rounds".format(roundNumber))
+        logger.info("Game finished after {} rounds".format(self.roundNumber))
         for plyr in self.players:
             logger.info("Player scored {} points".format(plyr[0].calcScore()))
 
@@ -48,20 +50,26 @@ class QwixGame:
         logger.info("Playing round {}".format(roundNumber))
         # get diceThrows
         throws = simulateThrow()
-        availableActive = getPossibleNumbers(throws, True) # this gets all combinations for the active player
-        availableOther = getPossibleNumbers(throws, False) # this gets the combinations of white dice only
+        availableActive = getPossibleNumbers(throws, True, self.closedColors) # this gets all combinations for the active player
+        availableOther = getPossibleNumbers(throws, False, self.closedColors) # this gets the combinations of white dice only
 
         for i in range(0, len(self.players)):
             if i == activePlayer:
                 result = self.decideActivePlayer(self.players[i], availableActive)
-                self.players[i][0].markNumber(result["color"], result["number"])
+                if self.players[i][0].markNumber(result["color"], result["number"]):
+                    self.closedColors.add(result["color"])
+                    logger.info("Closed color {}".format(result["color"]))
                 if result["color"] != "error": # if no failed throw, then potentially get another throw
                     availableActive = self.pruneAvailable(availableActive, result)
                     result = self.decideOtherPlayer(self.players[i], availableActive)
-                    self.players[i][0].markNumber(result["color"], result["number"])
+                    if self.players[i][0].markNumber(result["color"], result["number"]):
+                        self.closedColors.add(result["color"])
+                        logger.info("Closed color {}".format(result["color"]))
             else:
                 result = self.decideOtherPlayer(self.players[i], availableOther)
-                self.players[i][0].markNumber(result["color"], result["number"])
+                if self.players[i][0].markNumber(result["color"], result["number"]):
+                    self.closedColors.add(result["color"])
+                    logger.info("Closed color {}".format(result["color"]))
 
     def decideActivePlayer(self, player, available):
         optionList = []
@@ -76,7 +84,7 @@ class QwixGame:
             if (playerCard.isAvailable(av[0], av[1])) >= 0:
                 optionList.append(self.createOption(av[0], av[1], av[2], playerCard))
 
-        logger.info(optionList)
+        logger.debug(optionList)
         result = player[1].makeMove(optionList)
         logger.info(result)
         return(result)
@@ -95,7 +103,7 @@ class QwixGame:
             if playerCard.isAvailable(av[0], av[1]) >= 0:
                 optionList.append(self.createOption(av[0], av[1], av[2], playerCard))
 
-        logger.info(optionList)
+        logger.debug(optionList)
         result = player[1].makeMove(optionList)
         logger.info(result)
         return(result)

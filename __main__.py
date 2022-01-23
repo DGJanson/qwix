@@ -14,4 +14,4 @@ if __name__ == "__main__":
     setupLogging()
 
     game = QwixGame()
-    game.playGame()
+    game.playFullGame()

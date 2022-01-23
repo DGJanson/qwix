@@ -58,22 +58,32 @@ class Card:
 
 
     def markNumber(self, color, number):
+        """
+        Remove the number from the set.
+
+        Return true if closed the color, false otherwise
+        """
         # edge cases -> pass and error
         if color == "pass": # do nothing
-            return
+            return False
 
         if color == "error": # increment wrong throws
             self.wrongThrows = self.wrongThrows + 1
-            return
+            return False
 
         if (self.isAvailable(color, number) < 0):
             logger.warning("Marking number that is not available")
-            return
+            return False
 
         while self.isAvailable(color, number) >= 0:
             self.available[color] = self.available[color][1:]
 
         self.marked[color].append(number)
+
+        if len(self.available[color]) <= 0:
+            return True
+        else:
+            return False
 
     def calcScore(self):
         score = 0
